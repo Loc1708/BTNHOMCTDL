@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <climits>
@@ -145,53 +145,35 @@ void readData(SinhVien**& a, int*& sz) {
 }
 
 
-//so sanh mssv;
-ll cmpMSSV(SinhVien a, SinhVien b) {
-	return a.mssv - b.mssv;
-}
-
-//so sanh do dai cua ten
-ll cmpTen(SinhVien a, SinhVien b) {
-	return a.hoten.len - b.hoten.len;
-}
-
-//so sanh diem trung binh
-ll cmpDTB(SinhVien a, SinhVien b) {
-	return a.dtb - b.dtb > 0 ? 1 : a.dtb - b.dtb < 0 ? -1 : 0;
-}
-
-//so sanh hoc phi
-ll cmpHP(SinhVien a, SinhVien b) {
-	return a.hp - b.hp > 0 ? 1 : a.hp - b.hp < 0 ? -1 : 0;
-}
-
-void shellSort(SinhVien*& a, int n, ll func(SinhVien a, SinhVien b), int chon2) {
-	for (int gap = n / 2; gap > 0; gap /= 2) {
-		for (int i = gap; i < n; i++) {
-			SinhVien tmp = a[i];
-			int j;
-			switch (chon2)
+// tối ưu lại shellsort
+void shellSort(SinhVien*& a, int n, int mode, int mode2) {
+	
+	for (int gap = n / 2; gap > 0; gap /= 2)
+	{
+		for (int i = gap; i < n; i++)
+		{
+			ll cur = getVal(a[i], mode);
+			SinhVien curt = a[i];
+			int pos = i;
+			while (pos >= gap && getVal(a[pos - gap], mode) > cur)
 			{
-			case 1: {
-				for (j = i; j >= gap && func(a[j - gap], tmp) > 0; j -= gap) {
-					a[j] = a[j - gap];
-				}
-				break;
-
+				a[pos] = a[pos - gap];
+				pos -= gap;
 			}
-			case 2: {
-				for (j = i; j >= gap && func(a[j - gap], tmp) < 0; j -= gap) {
-					a[j] = a[j - gap];
-				}
-				break;
-			}
-			default:
-				break;
-			}
-			a[j] = tmp;
+			a[pos] = curt;
 		}
-
 	}
+	if (mode2 == 2)
+	{
+		int l = 0; int r = n - 1;
+		while (l < r)
+		{
+			swap(a[l], a[r]);
+			l++;
+			r--;
+		}
+	}
+	
 
 }
 
@@ -263,6 +245,83 @@ void radixSort(SinhVien*& a, int n, int chon1, int chon2) {
 
 }
 
+void insertionSort(SinhVien*& bucket, int k,int mode)
+{
+	for (int i = 1; i < k; i++)
+	{
+		SinhVien cur1 = bucket[i];
+		ll cur = getVal(bucket[i], mode);
+		int pos = i - 1;
+		while (pos >= 0 && getVal(bucket[pos], mode) > cur)
+		{
+			bucket[pos + 1] = bucket[pos];
+			pos--;
+		}
+		bucket[pos + 1] = cur1;
+	}
+}
+
+ll divide(ll n)
+{
+	int sum = 1;
+	while (n != 0)
+	{
+		sum *= 10;
+		n /= 10;
+	}
+	return sum;
+}
+
+ll getMax(SinhVien*& a,int n ,int mode)
+{
+	ll tam = getVal(a[0], mode);
+	for (int i = 1; i < n; i++)
+	{
+		ll t = getVal(a[i], mode);
+		if (tam < t) tam = t;
+	}
+	return tam;
+}
+
+void bucketSortV2(SinhVien*& a, int n, int mode)
+{
+	int m = getMax(a, n, mode);
+	int div = divide(m) / 10;
+	SinhVien** bucket = new SinhVien * [n];
+	int* sz = new int[n];
+	for (int i = 0; i < n; i++) {
+		bucket[i] = nullptr;
+		sz[i] = 0;
+	}
+	for (int i = 0; i < n; i++)
+	{
+		int bucketI = getVal(a[i], mode) / div;
+		push(bucket[bucketI], sz[i], a[i]);
+	}
+	for (int i = 0; i < n; i++)
+	{
+		if (bucket[i] == nullptr)continue;
+		insertionSort(bucket[i], sz[i], mode);
+	}
+	int idx = 0;
+	for (int i = 0; i < n; i++) {
+		if (bucket[i] == nullptr)continue;
+		for (int j = 0; j < sz[i]; j++) {
+			a[idx] = bucket[i][j];
+			idx++;
+		}
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		cout << a[i].mssv;
+	}
+
+	
+}
+
+
+
 void bucketSort(SinhVien*& a, int n, int chon1, int chon2) {
 	SinhVien** bucket = new SinhVien * [n];
 	int* sz = new int[n];
@@ -331,14 +390,14 @@ void process(SinhVien**& a, int*& sz, int chon, int chon1, int chon2, List& l) {
 			switch (chon1)
 			{
 			case 1: {
-				shellSort(l.list, l.n, cmpMSSV, chon2);
+				shellSort(l.list, l.n, chon1,chon2);
 				break;
 			}
 			case 3: {
-				shellSort(l.list, l.n, cmpDTB, chon2);
+				shellSort(l.list, l.n, chon1,chon2);
 				break;
 			case 4: {
-				shellSort(l.list, l.n, cmpHP, chon2);
+				shellSort(l.list, l.n, chon1,chon2);
 				break;
 			}
 			}
@@ -370,7 +429,7 @@ void process(SinhVien**& a, int*& sz, int chon, int chon1, int chon2, List& l) {
 			switch (chon)
 			{
 			case 1: {
-				shellSort(a[i], sz[i], cmpTen, chon2);
+				shellSort(a[i], sz[i], chon1,chon2);
 
 				break;
 			}
@@ -415,9 +474,11 @@ int main() {
 
 	//luu tru du lieu bang mang khi nguoi dung chon sort theo mssv,diem trung binh,hoc phi
 	List l;
+
+
 	
-
-
+	
+	cout << "========================================\n";
 	int c;
 	do
 	{
@@ -458,6 +519,7 @@ int main() {
 
 		cout << "Tiep tuc ( bam 1 ) / ket thuc( bam 0 ): ";
 		cin >> c;
+		
 	} while (c == 1);
 
 
